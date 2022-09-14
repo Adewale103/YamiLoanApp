@@ -16,7 +16,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "loan")
-public class Loan implements Serializable {
+public class Loan{
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long loanId;

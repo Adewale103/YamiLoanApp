@@ -13,7 +13,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
-import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,11 +23,11 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "customer")
-public class Customer implements Serializable {
+public class Customer {
     @Id
     @SequenceGenerator(name = "user_id_sequence",
-    allocationSize = 1,
-    sequenceName = "user_id_sequence")
+            allocationSize = 1,
+            sequenceName = "user_id_sequence")
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "user_id_sequence")
     private long id;
     private String firstName;
@@ -36,17 +35,12 @@ public class Customer implements Serializable {
     private String email;
     @JsonDeserialize(using = LocalDateDeserializer.class)
     @JsonSerialize(using = LocalDateSerializer.class)
-    @JsonFormat(shape = JsonFormat.Shape.STRING,pattern = "dd-MM-yyyy")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy")
     private LocalDate dateJoined;
     private String password;
-    private String confirmPassword;
     private double salary;
     private String phoneNumber;
     private String NIN;
-    private double walletAmount;
-
-    @OneToMany(mappedBy = "customer",cascade = CascadeType.ALL,fetch = FetchType.LAZY)
-    private List<Loan> loans = new ArrayList<>();
-
-
+    @OneToOne(cascade = CascadeType.ALL)
+    private Wallet wallet;
 }
