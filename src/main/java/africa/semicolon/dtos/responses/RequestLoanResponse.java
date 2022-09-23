@@ -1,33 +1,23 @@
-package africa.semicolon.yamiloanapp.data.models;
+package africa.semicolon.dtos.responses;
 
 import africa.semicolon.yamiloanapp.data.models.enums.LoanType;
 import lombok.*;
-
-import javax.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-@Entity
-@Getter
 @Setter
-@Builder
+@Getter
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "loan")
-public class Loan{
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+@Builder
+public class RequestLoanResponse {
+    private String message;
     private long loanId;
-    private BigDecimal loanRequestAmount;
     private BigDecimal amountToReturn;
     private double interestRate;
-    @Enumerated(value = EnumType.STRING)
     private LoanType loanType;
     private int durationInMonth;
     private LocalDate collectionDate;
     private LocalDate dueDate;
     private double monthlyEMI;
-
-
-
 }

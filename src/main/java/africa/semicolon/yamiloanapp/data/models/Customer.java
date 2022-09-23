@@ -11,8 +11,10 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 
 import javax.persistence.*;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,25 +24,26 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "customer")
 public class Customer {
     @Id
     @SequenceGenerator(name = "user_id_sequence",
             allocationSize = 1,
             sequenceName = "user_id_sequence")
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "user_id_sequence")
-    private long id;
+    private long customerId;
     private String firstName;
     private String lastName;
     private String email;
-    @JsonDeserialize(using = LocalDateDeserializer.class)
-    @JsonSerialize(using = LocalDateSerializer.class)
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy")
+    @CreationTimestamp
+    @Column(name = "dateJoined", updatable = false)
     private LocalDate dateJoined;
     private String password;
-    private double salary;
+    private BigDecimal salary;
     private String phoneNumber;
     private String NIN;
     @OneToOne(cascade = CascadeType.ALL)
-    private Wallet wallet;
+    private Account account;
+    @ManyToOne
+    @JoinColumn(name = "yamiBank",updatable = false,insertable = false)
+    private YamiBank yamiBank;
 }
