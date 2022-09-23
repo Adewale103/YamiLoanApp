@@ -21,6 +21,8 @@ public class Account {
     @OneToOne(cascade = CascadeType.ALL)
     private Loan loan;
     private boolean eligibleForLoan;
+    private boolean stillOwing;
     @OneToMany(mappedBy = "account",cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Transaction> transactionList = new ArrayList<>();
+    private BigDecimal maximumEligibleAmount;
 }

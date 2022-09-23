@@ -2,7 +2,6 @@ package africa.semicolon.dtos.requests;
 
 import lombok.*;
 import java.math.BigDecimal;
-import java.time.LocalDate;
 
 @Setter
 @Getter

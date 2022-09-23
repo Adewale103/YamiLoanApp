@@ -3,9 +3,11 @@ package africa.semicolon.yamiloanapp.services.loan;
 import africa.semicolon.dtos.requests.RequestLoanRequest;
 import africa.semicolon.dtos.responses.RequestLoanResponse;
 import africa.semicolon.yamiloanapp.data.models.Loan;
+import africa.semicolon.yamiloanapp.data.models.Transaction;
 import africa.semicolon.yamiloanapp.data.models.enums.LoanType;
 import africa.semicolon.yamiloanapp.data.repositories.LoanRepository;
 import africa.semicolon.yamiloanapp.exceptions.LoanException;
+import africa.semicolon.yamiloanapp.services.transaction.TransactionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +19,7 @@ import java.time.LocalDate;
 @RequiredArgsConstructor
 public class LoanServiceImpl implements LoanService{
     private final LoanRepository loanRepository;
+    private final TransactionService transactionService;
     @Override
     public RequestLoanResponse requestLoan(RequestLoanRequest requestLoanRequest) {
         if(requestLoanRequest.getDurationInMonth() > 5){
