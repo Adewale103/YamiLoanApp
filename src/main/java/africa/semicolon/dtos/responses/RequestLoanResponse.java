@@ -13,6 +13,7 @@ import java.time.LocalDate;
 public class RequestLoanResponse {
     private String message;
     private long loanId;
+    private long amountRequested;
     private BigDecimal amountToReturn;
     private double interestRate;
     private LoanType loanType;
