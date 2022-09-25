@@ -1,4 +1,4 @@
-package africa.semicolon.dtos.responses;
+package africa.semicolon.yamiloanapp.dtos.responses;
 
 import africa.semicolon.yamiloanapp.data.models.enums.LoanType;
 import lombok.*;

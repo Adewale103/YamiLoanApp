@@ -22,6 +22,16 @@ public class TransactionServiceImpl implements TransactionService{
         return transactionRepository.findById(transactionId).orElseThrow(()-> new TransactionDoesNotExistException("Transaction does not exist", 404) );
     }
 
+    @Override
+    public void deleteAll() {
+        transactionRepository.deleteAll();
+    }
+
+    @Override
+    public long size() {
+        return transactionRepository.count();
+    }
+
     private void validateThatTransactionDoesNotExist(Transaction transaction){
         if(transactionRepository.existsById(transaction.getTransactionId())){
             throw new TransactionAlreadyExistException("Transaction already saved.",400);

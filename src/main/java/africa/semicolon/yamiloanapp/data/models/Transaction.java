@@ -1,7 +1,6 @@
 package africa.semicolon.yamiloanapp.data.models;
 
 import africa.semicolon.yamiloanapp.data.models.enums.TransactionType;
-import jdk.jfr.Timestamp;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 

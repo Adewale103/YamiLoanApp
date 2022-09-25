@@ -1,7 +1,7 @@
 package africa.semicolon.yamiloanapp.services.mail;
 
-import africa.semicolon.dtos.requests.MailRequest;
-import africa.semicolon.dtos.responses.MailResponse;
+import africa.semicolon.yamiloanapp.dtos.requests.MailRequest;
+import africa.semicolon.yamiloanapp.dtos.responses.MailResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.SimpleMailMessage;

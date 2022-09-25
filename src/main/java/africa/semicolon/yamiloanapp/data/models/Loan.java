@@ -26,6 +26,7 @@ public class Loan{
     private int durationInMonth;
     private LocalDate collectionDate;
     private LocalDate dueDate;
+    private boolean fullyPaid;
     private double monthlyEMI;
 
 

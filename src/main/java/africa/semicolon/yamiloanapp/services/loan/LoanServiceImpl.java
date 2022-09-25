@@ -1,12 +1,17 @@
 package africa.semicolon.yamiloanapp.services.loan;
 
-import africa.semicolon.dtos.requests.RequestLoanRequest;
-import africa.semicolon.dtos.responses.RequestLoanResponse;
+import africa.semicolon.yamiloanapp.dtos.requests.RepayLoanRequest;
+import africa.semicolon.yamiloanapp.dtos.requests.RequestLoanRequest;
+import africa.semicolon.yamiloanapp.dtos.responses.RepayLoanResponse;
+import africa.semicolon.yamiloanapp.dtos.responses.RequestLoanResponse;
+import africa.semicolon.yamiloanapp.data.models.Account;
 import africa.semicolon.yamiloanapp.data.models.Loan;
 import africa.semicolon.yamiloanapp.data.models.Transaction;
 import africa.semicolon.yamiloanapp.data.models.enums.LoanType;
+import africa.semicolon.yamiloanapp.data.models.enums.TransactionType;
 import africa.semicolon.yamiloanapp.data.repositories.LoanRepository;
 import africa.semicolon.yamiloanapp.exceptions.LoanException;
+import africa.semicolon.yamiloanapp.services.account.AccountService;
 import africa.semicolon.yamiloanapp.services.transaction.TransactionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -14,12 +19,16 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+import static java.time.temporal.ChronoUnit.DAYS;
 
 @Service
 @RequiredArgsConstructor
 public class LoanServiceImpl implements LoanService{
     private final LoanRepository loanRepository;
     private final TransactionService transactionService;
+    private final AccountService accountService;
     @Override
     public RequestLoanResponse requestLoan(RequestLoanRequest requestLoanRequest) {
         if(requestLoanRequest.getDurationInMonth() > 5){
@@ -32,6 +41,16 @@ public class LoanServiceImpl implements LoanService{
         Loan loan = buildLoanFrom(requestLoanRequest, interestRate, amountToReturn, monthlyEMI);
 
         loanRepository.save(loan);
+        Transaction transaction = buildApplyForLoanTransaction(requestLoanRequest, amountToReturn);
+
+        transactionService.save(transaction);
+        requestLoanRequest.getAccount().setLoan(loan);
+        requestLoanRequest.getAccount().setWalletAmount(requestLoanRequest.getAccount().getWalletAmount().add(requestLoanRequest.getLoanRequestAmount()));
+        requestLoanRequest.getAccount().setEligibleForLoan(false);
+        requestLoanRequest.getAccount().setStillOwing(true);
+        requestLoanRequest.getAccount().setMaximumEligibleAmount(BigDecimal.ZERO);
+        requestLoanRequest.getAccount().getTransactionList().add(transaction);
+        accountService.save(requestLoanRequest.getAccount());
         return buildRequestLoanResponseFrom(loan);
     }
 
@@ -39,6 +58,69 @@ public class LoanServiceImpl implements LoanService{
     public Loan findLoanById(long loanId) {
         return loanRepository.findById(loanId).orElseThrow(()->
                 new LoanException("Loan not found. Please check loan Id again ",404));
+    }
+
+    @Override
+    public RepayLoanResponse repayLoan(RepayLoanRequest repayLoanRequest) {
+        Loan loan = repayLoanRequest.getAccount().getLoan();
+        Account account = repayLoanRequest.getAccount();
+        if (repayLoanRequest.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new LoanException("Invalid amount, kindly check again", 400);
+        }
+        if (LocalDate.now().isBefore(loan.getDueDate()) || LocalDate.now().isEqual(loan.getDueDate())) {
+            account.setWalletAmount(repayLoanRequest.getAmount().add(account.getWalletAmount()));
+        } else if (DAYS.between(LocalDate.now(), loan.getDueDate()) == -1) {
+                account.setWalletAmount(repayLoanRequest.getAmount().add(account.getWalletAmount()).
+                        subtract(repayLoanRequest.getAmount().multiply(BigDecimal.valueOf(0.02))));
+        }
+        else if (DAYS.between(LocalDate.now(), loan.getDueDate()) == -2) {
+            account.setWalletAmount(repayLoanRequest.getAmount().add(account.getWalletAmount()).
+                    subtract(repayLoanRequest.getAmount().multiply(BigDecimal.valueOf(0.04))));
+        }
+        else if (DAYS.between(LocalDate.now(), loan.getDueDate()) == -3) {
+            account.setWalletAmount(repayLoanRequest.getAmount().add(account.getWalletAmount()).
+                    subtract(repayLoanRequest.getAmount().multiply(BigDecimal.valueOf(0.06))));
+        }
+        else if (DAYS.between(LocalDate.now(), loan.getDueDate()) < -3) {
+            account.setWalletAmount(repayLoanRequest.getAmount().add(account.getWalletAmount()).
+                    subtract(repayLoanRequest.getAmount().multiply(BigDecimal.valueOf(0.08))));
+        }
+        if (account.getWalletAmount().compareTo(BigDecimal.ZERO) >= 0) {
+            account.setEligibleForLoan(true);
+            account.setStillOwing(false);
+            account.setLoan(null);
+        }
+        loan.setFullyPaid(true);
+        loanRepository.save(loan);
+        Transaction transaction = buildRepayLoanTransaction(repayLoanRequest,account);
+        transactionService.save(transaction);
+        account.getTransactionList().add(transaction);
+        accountService.save(account);
+        return RepayLoanResponse.builder()
+                .message("You've successfully paid "+repayLoanRequest.getAmount())
+                .successful(true)
+                .build();
+    }
+
+    private Transaction buildRepayLoanTransaction(RepayLoanRequest repayLoanRequest, Account account) {
+        return Transaction.builder()
+                .transactionAmount(repayLoanRequest.getAmount())
+                .balanceAfterTransaction(account.getWalletAmount())
+                .transactionType(TransactionType.CREDIT)
+                .transactionTime(LocalDateTime.now())
+                .message("Successfully paid "+repayLoanRequest.getAmount())
+                .build();
+    }
+
+
+    private Transaction buildApplyForLoanTransaction(RequestLoanRequest requestLoanRequest, BigDecimal amountToReturn) {
+        return Transaction.builder()
+                .transactionAmount(amountToReturn)
+                .balanceAfterTransaction(requestLoanRequest.getAccount().getWalletAmount().add(amountToReturn))
+                .transactionType(TransactionType.CREDIT)
+                .transactionTime(LocalDateTime.now())
+                .message("Congrats! Your wallet has been credited with "+ requestLoanRequest.getLoanRequestAmount())
+                .build();
     }
 
     private RequestLoanResponse buildRequestLoanResponseFrom(Loan loan) {
@@ -60,12 +142,11 @@ public class LoanServiceImpl implements LoanService{
                 .loanRequestAmount(requestLoanRequest.getLoanRequestAmount())
                 .loanType(LoanType.valueOf(requestLoanRequest.getLoanType()))
                 .collectionDate(LocalDate.now())
-                .dueDate(LocalDate.of(LocalDate.now().getYear(),
-                        validateMonthInput(LocalDate.now().getMonth().getValue()+ requestLoanRequest.getDurationInMonth()),
-                        LocalDate.now().getDayOfMonth()))
+                .dueDate(LocalDate.now().plusDays(30L * requestLoanRequest.getDurationInMonth()))
                 .durationInMonth(requestLoanRequest.getDurationInMonth())
                 .amountToReturn(amountToReturn)
                 .monthlyEMI(monthlyEMI)
+                .fullyPaid(false)
                 .interestRate(interestRate)
                 .build();
     }
@@ -83,12 +164,6 @@ public class LoanServiceImpl implements LoanService{
 
     private BigDecimal computeAmountToReturn(BigDecimal loanRequestAmount, double interestRate){
         return loanRequestAmount.multiply(BigDecimal.valueOf(interestRate)).add(loanRequestAmount);
-    }
-    private int validateMonthInput(int monthNumber){
-        if(monthNumber > 12){
-            return monthNumber % 12;
-        }
-        return monthNumber;
     }
 
 }

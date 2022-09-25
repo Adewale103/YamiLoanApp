@@ -1,5 +1,6 @@
-package africa.semicolon.dtos.requests;
+package africa.semicolon.yamiloanapp.dtos.requests;
 
+import africa.semicolon.yamiloanapp.data.models.Account;
 import lombok.*;
 import java.math.BigDecimal;
 
@@ -12,4 +13,5 @@ public class RequestLoanRequest {
     private BigDecimal loanRequestAmount;
     private String loanType;
     private int durationInMonth;
+    private Account account;
 }

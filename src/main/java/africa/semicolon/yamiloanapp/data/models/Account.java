@@ -22,7 +22,7 @@ public class Account {
     private Loan loan;
     private boolean eligibleForLoan;
     private boolean stillOwing;
-    @OneToMany(mappedBy = "account",cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "account",cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<Transaction> transactionList = new ArrayList<>();
     private BigDecimal maximumEligibleAmount;
 }

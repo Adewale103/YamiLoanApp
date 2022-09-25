@@ -1,4 +1,4 @@
-package africa.semicolon.dtos.responses;
+package africa.semicolon.yamiloanapp.dtos.responses;
 
 import lombok.*;
 
